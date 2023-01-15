@@ -41,8 +41,7 @@ pub fn list(
     let resp_text = http_response
         .text()
         .map_err(|_| Errors::WebDavReqeustFailed)?;
-    let parser =
-        roxmltree::Document::parse(&resp_text).map_err(|n| Errors::XMLDocumentParseError(n))?;
+    let parser = roxmltree::Document::parse(&resp_text).map_err(Errors::XMLDocumentParseError)?;
 
     // Gets all nodes with "response" tag. One prop per response
     let responses = parser.descendants().filter(|n| n.has_tag_name("response"));
@@ -52,15 +51,15 @@ pub fn list(
         let props = response
             .descendants()
             .find(|n| n.has_tag_name("prop"))
-            .ok_or(Errors::XMLTagEmptyWhenItShouldNot("prop".into()))?;
+            .ok_or_else(|| Errors::XMLTagEmptyWhenItShouldNot("prop".into()))?;
 
         // the href, which contains the path (I think?) is one level above the prop
         let href = response
             .descendants()
             .find(|n| n.has_tag_name("href"))
-            .ok_or(Errors::XMLTagEmptyWhenItShouldNot("href".into()))?
+            .ok_or_else(|| Errors::XMLTagEmptyWhenItShouldNot("href".into()))?
             .text()
-            .ok_or(Errors::XMLTagEmptyWhenItShouldNot("href".into()))?;
+            .ok_or_else(|| Errors::XMLTagEmptyWhenItShouldNot("href".into()))?;
 
         println!("{:#?}", props);
         println!("{:?}", props.descendants().count());
@@ -74,14 +73,10 @@ pub fn list(
             match el.tag_name().name() {
                 "getlastmodified" => {
                     propb = propb.last_modified(
-                        DateTime::parse_from_rfc2822(
-                            el.text()
-                                .ok_or(Errors::XMLTagEmptyWhenItShouldNot(
-                                    "getlastmodified".into(),
-                                ))?
-                                .into(),
-                        )
-                        .map_err(|n| Errors::DateTimeConversionError(n))?
+                        DateTime::parse_from_rfc2822(el.text().ok_or_else(|| {
+                            Errors::XMLTagEmptyWhenItShouldNot("getlastmodified".into())
+                        })?)
+                        .map_err(Errors::DateTimeConversionError)?
                         .timestamp(),
                     );
                 }
@@ -95,9 +90,9 @@ pub fn list(
                 "getcontentlength" => {
                     propb = propb.size(
                         el.text()
-                            .ok_or(Errors::XMLTagEmptyWhenItShouldNot(
-                                "getcontentlength".into(),
-                            ))?
+                            .ok_or_else(|| {
+                                Errors::XMLTagEmptyWhenItShouldNot("getcontentlength".into())
+                            })?
                             .parse::<u64>()
                             .map_err(|_| Errors::PropSizeError)?,
                     )
@@ -105,8 +100,8 @@ pub fn list(
                 "getetag" => {
                     propb = propb.etag(
                         el.text()
-                            .ok_or(Errors::XMLTagEmptyWhenItShouldNot("getetag".into()))?
-                            .replace("\"", "")
+                            .ok_or_else(|| Errors::XMLTagEmptyWhenItShouldNot("getetag".into()))?
+                            .replace('\"', "")
                             .to_string(),
                     )
                 }

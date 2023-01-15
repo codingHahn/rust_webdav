@@ -53,7 +53,7 @@ impl Prop {
     }
 
     pub fn path(&self) -> &Path {
-        &self.path.as_path()
+        self.path.as_path()
     }
 
     pub fn size(&self) -> u64 {

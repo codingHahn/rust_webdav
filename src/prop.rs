@@ -24,7 +24,7 @@ pub struct Prop {
     /// Size in bytes
     size: u64,
     /// Unix timestamp of the last modification date
-    last_modified: i64,
+    last_modified: u64,
     /// Type of the prop
     resource_type: ResourceType,
 }
@@ -35,7 +35,7 @@ impl Prop {
         path: PathBuf,
         size: u64,
         resource_type: ResourceType,
-        last_modified: i64,
+        last_modified: u64,
     ) -> Self {
         Prop {
             etag,
@@ -60,7 +60,7 @@ impl Prop {
         self.size
     }
 
-    pub fn last_modified(&self) -> i64 {
+    pub fn last_modified(&self) -> u64 {
         self.last_modified
     }
 
@@ -82,7 +82,7 @@ impl PropBuilder {
                 etag: "".to_string(),
                 path: "".into(),
                 size: 0,
-                last_modified: -1,
+                last_modified: 0,
                 resource_type: ResourceType::Invalid,
             },
         }
@@ -102,7 +102,7 @@ impl PropBuilder {
         self
     }
 
-    pub fn last_modified(mut self, last_modified: i64) -> Self {
+    pub fn last_modified(mut self, last_modified: u64) -> Self {
         self.prop.last_modified = last_modified;
         self
     }

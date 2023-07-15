@@ -1,3 +1,7 @@
+use std::ffi::OsString;
+
+use crate::filesystem::InodeId;
+
 #[derive(Debug, Clone)]
 pub enum Errors {
     /// The reqeust from the server errored out
@@ -10,4 +14,11 @@ pub enum Errors {
     XMLTagEmptyWhenItShouldNot(String),
     /// The timestamp could not be converted to UNIX time
     DateTimeConversionError(chrono::ParseError),
+    InodeNotFound(InodeId),
+    ParentInodeNotFound(InodeId),
+    ChildInodeNotFound(InodeId),
+    FileEntryMissing(InodeId),
+    FileDoesNotExist(OsString),
+
+    NonUnicodeInPath(OsString),
 }
